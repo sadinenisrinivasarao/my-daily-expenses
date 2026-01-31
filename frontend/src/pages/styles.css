@@ -1,0 +1,222 @@
+/* =====================
+   DESIGN TOKENS
+===================== */
+:root {
+  --primary: #1677ff;
+  --primary-light: #e6f0ff;
+  --danger: #ff4d4f;
+  --success: #52c41a;
+  --bg: #f5f7fb;
+  --card-bg: #ffffff;
+  --text-dark: #1f2937;
+  --radius: 16px;
+}
+
+/* =====================
+   GLOBAL RESET
+===================== */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* =====================
+   PAGE TRANSITIONS
+===================== */
+.page {
+  animation: fadeSlide 0.45s ease;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =====================
+   BRANDING
+===================== */
+.logo {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+.logo span {
+  color: #69b1ff;
+}
+
+/* =====================
+   LAYOUT
+===================== */
+.header {
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.content {
+  padding: 24px;
+}
+
+/* =====================
+   CARDS
+===================== */
+.ant-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.ant-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+}
+
+/* =====================
+   BUTTONS & INPUTS
+===================== */
+.ant-btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  border-radius: 10px;
+}
+
+.ant-input,
+.ant-select-selector,
+.ant-picker {
+  border-radius: 10px !important;
+}
+
+/* =====================
+   TABLE
+===================== */
+.ant-table {
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* =====================
+   RESPONSIVE
+===================== */
+@media (max-width: 768px) {
+  .content {
+    padding: 16px;
+  }
+
+  .logo {
+    font-size: 18px;
+  }
+}
+
+.ant-statistic-title {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.ant-statistic-content {
+  font-size: 26px;
+}
+
+
+/* ===== LOGIN ===== */
+.login-bg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #d7dce3, #69b1ff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 32px 24px;
+  border-radius: 18px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+  animation: fadeUp 0.6s ease;
+}
+
+.login-logo {
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+/* ===== DASHBOARD ===== */
+.dashboard-page {
+  animation: fadeUp 0.4s ease;
+}
+
+.dashboard-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.stat-card {
+  border-radius: 16px;
+  color: #fff;
+}
+
+.stat-card.income {
+  background: linear-gradient(135deg, #52c41a, #73d13d);
+}
+
+.stat-card.expense {
+  background: linear-gradient(135deg, #ff4d4f, #ff7875);
+}
+
+.stat-card.balance {
+  background: linear-gradient(135deg, #1677ff, #69b1ff);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .dashboard-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
