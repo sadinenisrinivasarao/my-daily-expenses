@@ -1,5 +1,7 @@
 import axios from "axios";
 
-export default axios.create({
-  baseURL: "https://my-daily-expenses-eight.vercel.app/api"
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL
 });
+
+export default api;
