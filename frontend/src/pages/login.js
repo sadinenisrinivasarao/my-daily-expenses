@@ -22,8 +22,8 @@ export default function Login() {
 
     setTimeout(() => {
       if (
-        email === "sadinenisrinivasarao6@gmail.com" &&
-        password === "Srinu@10101997"
+        email === process.env.REACT_APP_EMAIL &&
+        password === process.env.REACT_APP_PSD
       ) {
         message.success("Welcome back 👋");
         localStorage.setItem("auth", "true");
