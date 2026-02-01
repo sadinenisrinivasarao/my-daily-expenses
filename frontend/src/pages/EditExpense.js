@@ -23,17 +23,26 @@ export default function EditExpense() {
 
   return (
     <Card title="Edit Expense" style={{ maxWidth: 400, margin: "24px auto" }}>
-      <Form form={form} layout="vertical" onFinish={onFinish}>
-        <Form.Item name="description"><Input /></Form.Item>
-        <Form.Item name="amount"><Input type="number" /></Form.Item>
-        <Form.Item name="type">
-          <Select options={[
-            { label: "Income", value: "IN" },
-            { label: "Expense", value: "OUT" }
-          ]} />
-        </Form.Item>
-        <Button type="primary" htmlType="submit" block>Save</Button>
-      </Form>
+      <Form.Item name="category" label="Category">
+        <Select
+          options={[
+            { label: "Food", value: "FOOD" },
+            { label: "Accommodation", value: "ACCOMMODATION" },
+            { label: "Shopping", value: "SHOPPING" },
+            { label: "Personal Care", value: "PERSONAL_CARE" }
+          ]}
+        />
+      </Form.Item>
+
+      <Form.Item name="paymentMode" label="Payment Mode">
+        <Select
+          options={[
+            { label: "Credit Card", value: "CREDIT_CARD" },
+            { label: "Bank Transfer", value: "BANK_TRANSFER" }
+          ]}
+        />
+      </Form.Item>
+
     </Card>
   );
 }

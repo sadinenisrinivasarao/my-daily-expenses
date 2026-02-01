@@ -73,6 +73,33 @@ export default function Dashboard() {
     return { date: d.date, balance: runningBalance };
   });
 
+  const categoryMap = {};
+const paymentMap = {};
+
+data.forEach(e => {
+  if (e.type === "OUT") {
+    if (e.category) {
+      categoryMap[e.category] =
+        (categoryMap[e.category] || 0) + e.amount;
+    }
+    if (e.paymentMode) {
+      paymentMap[e.paymentMode] =
+        (paymentMap[e.paymentMode] || 0) + e.amount;
+    }
+  }
+});
+
+const categoryData = Object.keys(categoryMap).map(k => ({
+  name: k.replace("_", " "),
+  value: categoryMap[k]
+}));
+
+const paymentData = Object.keys(paymentMap).map(k => ({
+  name: k.replace("_", " "),
+  value: paymentMap[k]
+}));
+
+
   return (
     <div className="dashboard-page">
       {/* Header */}
@@ -175,6 +202,56 @@ export default function Dashboard() {
           </Card>
         </Col>
       </Row>
+
+
+      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+  <Col xs={24} md={12}>
+    <Card title="Expense by Category">
+      <ResponsiveContainer height={280}>
+        <PieChart>
+          <Pie
+            data={categoryData}
+            dataKey="value"
+            outerRadius={100}
+            label
+          >
+            {categoryData.map((_, i) => (
+              <Cell
+                key={i}
+                fill={["#1677ff", "#52c41a", "#faad14", "#ff4d4f"][i % 4]}
+              />
+            ))}
+          </Pie>
+          <Tooltip />
+        </PieChart>
+      </ResponsiveContainer>
+    </Card>
+  </Col>
+
+  <Col xs={24} md={12}>
+    <Card title="Expense by Payment Mode">
+      <ResponsiveContainer height={280}>
+        <PieChart>
+          <Pie
+            data={paymentData}
+            dataKey="value"
+            outerRadius={100}
+            label
+          >
+            {paymentData.map((_, i) => (
+              <Cell
+                key={i}
+                fill={["#722ed1", "#13c2c2"][i % 2]}
+              />
+            ))}
+          </Pie>
+          <Tooltip />
+        </PieChart>
+      </ResponsiveContainer>
+    </Card>
+  </Col>
+</Row>
+
     </div>
   );
 }

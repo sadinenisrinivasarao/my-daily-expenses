@@ -15,38 +15,34 @@ export default function AddExpense() {
   return (
     <div className="page">
       <Card title="Add Expense" style={{ maxWidth: 420, margin: "0 auto" }}>
-        <Form layout="vertical" onFinish={onFinish}>
-          <Form.Item label="Description" name="description" rules={[{ required: true }]}>
-            <Input placeholder="Groceries, Rent, Salary…" />
-          </Form.Item>
+        <Form.Item
+          label="Category"
+          name="category"
+          rules={[{ required: true, message: "Select category" }]}
+        >
+          <Select
+            options={[
+              { label: "Food", value: "FOOD" },
+              { label: "Accommodation", value: "ACCOMMODATION" },
+              { label: "Shopping", value: "SHOPPING" },
+              { label: "Personal Care", value: "PERSONAL_CARE" }
+            ]}
+          />
+        </Form.Item>
 
-          <Form.Item label="Amount" name="amount" rules={[{ required: true }]}>
-            <Input type="number" placeholder="₹ Amount" />
-          </Form.Item>
+        <Form.Item
+          label="Payment Mode"
+          name="paymentMode"
+          rules={[{ required: true, message: "Select payment mode" }]}
+        >
+          <Select
+            options={[
+              { label: "Credit Card", value: "CREDIT_CARD" },
+              { label: "Bank Transfer", value: "BANK_TRANSFER" }
+            ]}
+          />
+        </Form.Item>
 
-          <Form.Item label="Type" name="type" rules={[{ required: true }]}>
-            <Select
-              options={[
-                { label: "Income", value: "IN" },
-                { label: "Expense", value: "OUT" }
-              ]}
-            />
-          </Form.Item>
-
-          <Form.Item label="Date" name="entryDate" rules={[{ required: true }]}>
-            <DatePicker style={{ width: "100%" }} />
-          </Form.Item>
-
-          <Button
-            type="primary"
-            icon={<PlusCircleOutlined />}
-            htmlType="submit"
-            block
-            size="large"
-          >
-            Save Expense
-          </Button>
-        </Form>
       </Card>
     </div>
   );
