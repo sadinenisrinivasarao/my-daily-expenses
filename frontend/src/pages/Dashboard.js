@@ -17,15 +17,20 @@ import {
   WalletOutlined
 } from "@ant-design/icons";
 import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
   BarChart,
   Bar,
   XAxis,
-  Tooltip,
   LineChart,
   Line,
   YAxis,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Legend
 } from "recharts";
+
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import { useNavigate } from "react-router-dom";
