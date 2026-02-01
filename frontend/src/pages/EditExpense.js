@@ -121,6 +121,19 @@ export default function EditExpense() {
           >
             <Input type="number" min={0} />
           </Form.Item>
+          <Form.Item
+            label="Type"
+            name="type"
+            rules={[{ required: true }]}
+          >
+            <Select
+              options={[
+                { label: "Paid Out", value: "OUT" },
+                { label: "Income", value: "IN" },
+              ]}
+            />
+          </Form.Item>
+
 
           {/* Date (future disabled) */}
           <Form.Item

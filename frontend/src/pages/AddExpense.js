@@ -10,33 +10,49 @@ export default function AddExpense() {
     try {
       await api.post("/expenses", {
         ...v,
-        entryDate: v.entryDate.toDate(), // dayjs → JS Date
+        entryDate: v.entryDate.toDate(),
       });
-
       message.success("Expense added successfully");
       nav("/dashboard");
-    } catch (err) {
+    } catch {
       message.error("Failed to add expense");
     }
   };
 
   return (
     <div className="page">
-      <Card title="Add Expense" style={{ maxWidth: 420, margin: "0 auto" }}>
-        <Form layout="vertical" onFinish={onFinish}>
-          
+      <Card title="Add Transaction" style={{ maxWidth: 420, margin: "0 auto" }}>
+        <Form
+          layout="vertical"
+          onFinish={onFinish}
+          initialValues={{ type: "OUT" }}
+        >
+
+          {/* Type */}
+          <Form.Item
+            label="Type"
+            name="type"
+            rules={[{ required: true }]}
+          >
+            <Select
+              options={[
+                { label: "Paid Out", value: "OUT" },
+                { label: "Income", value: "IN" },
+              ]}
+            />
+          </Form.Item>
+
           {/* Payment Mode */}
           <Form.Item
             label="Payment Mode"
             name="paymentMode"
-            rules={[{ required: true, message: "Select payment mode" }]}
+            rules={[{ required: true }]}
           >
             <Select
-              placeholder="Select payment mode"
               options={[
+               // { label: "Cash", value: "CASH" },
                 { label: "Credit Card", value: "CREDIT_CARD" },
                 { label: "Bank Transfer", value: "BANK_TRANSFER" },
-                { label: "Cash", value: "CASH" },
               ]}
             />
           </Form.Item>
@@ -45,62 +61,39 @@ export default function AddExpense() {
           <Form.Item
             label="Category"
             name="category"
-            rules={[{ required: true, message: "Select category" }]}
+            rules={[{ required: true }]}
           >
             <Select
-              placeholder="Select category"
               options={[
                 { label: "Food", value: "FOOD" },
                 { label: "Accommodation", value: "ACCOMMODATION" },
                 { label: "Shopping", value: "SHOPPING" },
                 { label: "Personal Care", value: "PERSONAL_CARE" },
                 { label: "Travel", value: "TRAVEL" },
+                { label: "Salary", value: "SALARY" },
+                { label: "Other Income", value: "OTHER_INCOME" },
               ]}
             />
           </Form.Item>
 
           {/* Description */}
-          <Form.Item
-            label="Description"
-            name="description"
-            rules={[
-              { required: true, message: "Enter description" },
-              { max: 100, message: "Max 100 characters" },
-            ]}
-          >
-            <Input placeholder="e.g. Lunch at restaurant" />
+          <Form.Item name="description" label="Description" rules={[{ required: true }]}>
+            <Input />
           </Form.Item>
 
           {/* Amount */}
-          <Form.Item
-            label="Amount"
-            name="amount"
-            rules={[{ required: true, message: "Enter amount" }]}
-          >
-            <Input type="number" min={0} placeholder="Enter amount" />
+          <Form.Item name="amount" label="Amount" rules={[{ required: true }]}>
+            <Input type="number" min={0} />
           </Form.Item>
 
           {/* Date */}
-          <Form.Item
-            label="Date"
-            name="entryDate"
-            rules={[{ required: true, message: "Select date" }]}
-          >
+          <Form.Item name="entryDate" label="Date" rules={[{ required: true }]}>
             <DatePicker style={{ width: "100%" }} />
           </Form.Item>
 
-          {/* Submit */}
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<PlusCircleOutlined />}
-              block
-            >
-              Add Expense
-            </Button>
-          </Form.Item>
-
+          <Button type="primary" htmlType="submit" block icon={<PlusCircleOutlined />}>
+            Save
+          </Button>
         </Form>
       </Card>
     </div>

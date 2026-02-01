@@ -37,11 +37,11 @@ export default function ExpenseList() {
       const dateMatch =
         dateRange?.length === 2 && e.entryDate
           ? dayjs(e.entryDate).isBetween(
-              dateRange[0],
-              dateRange[1],
-              "day",
-              "[]"
-            )
+            dateRange[0],
+            dateRange[1],
+            "day",
+            "[]"
+          )
           : true;
 
       return pmMatch && dateMatch;
@@ -59,19 +59,13 @@ export default function ExpenseList() {
   }, [filteredData]);
 
   /* ---------- MONTHLY TOTAL ---------- */
-  const monthlyTotal = useMemo(() => {
-    const month = dayjs().month();
-    const year = dayjs().year();
+ const monthlyTotal = useMemo(() => {
+  return filteredData.reduce((sum, e) => {
+    const amt = e.amount || 0;
+    return e.type === "IN" ? sum + amt : sum - amt;
+  }, 0);
+}, [filteredData]);
 
-    return filteredData
-      .filter(
-        e =>
-          e.entryDate &&
-          dayjs(e.entryDate).month() === month &&
-          dayjs(e.entryDate).year() === year
-      )
-      .reduce((sum, e) => sum + (e.amount || 0), 0);
-  }, [filteredData]);
 
   /* ---------- TABLE COLUMNS ---------- */
   const columns = [
@@ -94,6 +88,16 @@ export default function ExpenseList() {
       dataIndex: "amount",
       render: v => <strong>₹ {v ?? 0}</strong>,
     },
+    {
+      title: "Type",
+      dataIndex: "type",
+      render: t => (
+        <strong style={{ color: t === "IN" ? "green" : "red" }}>
+          {t === "IN" ? "Income" : "Paid Out"}
+        </strong>
+      ),
+    },
+
     {
       title: "Action",
       render: (_, r) => (
