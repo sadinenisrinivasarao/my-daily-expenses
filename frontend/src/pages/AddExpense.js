@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, Input, Select, DatePicker, Button, Form, message } from "antd";
 import { PlusCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -5,17 +6,23 @@ import api from "../services/api";
 
 export default function AddExpense() {
   const nav = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const onFinish = async (v) => {
     try {
+      setLoading(true); // 🔒 disable button
+
       await api.post("/expenses", {
         ...v,
         entryDate: v.entryDate.toDate(),
       });
+
       message.success("Expense added successfully");
       nav("/dashboard");
     } catch {
       message.error("Failed to add expense");
+    } finally {
+      setLoading(false); // 🔓 re-enable (in case of error)
     }
   };
 
@@ -29,11 +36,7 @@ export default function AddExpense() {
         >
 
           {/* Type */}
-          <Form.Item
-            label="Type"
-            name="type"
-            rules={[{ required: true }]}
-          >
+          <Form.Item label="Type" name="type" rules={[{ required: true }]}>
             <Select
               options={[
                 { label: "Paid Out", value: "OUT" },
@@ -43,14 +46,9 @@ export default function AddExpense() {
           </Form.Item>
 
           {/* Payment Mode */}
-          <Form.Item
-            label="Payment Mode"
-            name="paymentMode"
-            rules={[{ required: true }]}
-          >
+          <Form.Item label="Payment Mode" name="paymentMode" rules={[{ required: true }]}>
             <Select
               options={[
-               // { label: "Cash", value: "CASH" },
                 { label: "Credit Card", value: "CREDIT_CARD" },
                 { label: "Bank Transfer", value: "BANK_TRANSFER" },
               ]}
@@ -58,11 +56,7 @@ export default function AddExpense() {
           </Form.Item>
 
           {/* Category */}
-          <Form.Item
-            label="Category"
-            name="category"
-            rules={[{ required: true }]}
-          >
+          <Form.Item label="Category" name="category" rules={[{ required: true }]}>
             <Select
               options={[
                 { label: "Food", value: "FOOD" },
@@ -72,7 +66,7 @@ export default function AddExpense() {
                 { label: "Travel", value: "TRAVEL" },
                 { label: "Salary", value: "SALARY" },
                 { label: "Other Income", value: "OTHER_INCOME" },
-                {label: "Others", value: "OTHERS"},
+                { label: "Others", value: "OTHERS" },
               ]}
             />
           </Form.Item>
@@ -92,9 +86,18 @@ export default function AddExpense() {
             <DatePicker style={{ width: "100%" }} />
           </Form.Item>
 
-          <Button type="primary" htmlType="submit" block icon={<PlusCircleOutlined />}>
-            Save
+          {/* Submit */}
+          <Button
+            type="primary"
+            htmlType="submit"
+            block
+            icon={<PlusCircleOutlined />}
+            loading={loading}
+            disabled={loading}
+          >
+            {loading ? "Saving..." : "Save"}
           </Button>
+
         </Form>
       </Card>
     </div>
