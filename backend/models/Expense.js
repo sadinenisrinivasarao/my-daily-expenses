@@ -32,6 +32,7 @@ const expenseSchema = new mongoose.Schema(
         "TRAVEL",
         "SALARY",
         "OTHER_INCOME",
+        "OTHERS",
       ],
       required: true,
     },

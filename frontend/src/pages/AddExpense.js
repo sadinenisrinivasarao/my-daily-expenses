@@ -72,6 +72,7 @@ export default function AddExpense() {
                 { label: "Travel", value: "TRAVEL" },
                 { label: "Salary", value: "SALARY" },
                 { label: "Other Income", value: "OTHER_INCOME" },
+                {label: "Others", value: "OTHERS"},
               ]}
             />
           </Form.Item>
