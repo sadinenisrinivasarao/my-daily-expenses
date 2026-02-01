@@ -8,13 +8,14 @@ import {
   Statistic,
   DatePicker,
   Radio,
-  Typography
+  Typography,
+  Space,
 } from "antd";
 import {
   PlusOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
-  WalletOutlined
+  WalletOutlined,
 } from "@ant-design/icons";
 import {
   PieChart,
@@ -28,19 +29,27 @@ import {
   Line,
   YAxis,
   ResponsiveContainer,
-  Legend
+  Legend,
 } from "recharts";
+import { motion } from "framer-motion";
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import { useNavigate } from "react-router-dom";
 import "./styles.css";
 
 dayjs.extend(weekOfYear);
-const { Title } = Typography;
+const { Title, Text } = Typography;
+
+/* ---------- COLORS ---------- */
+const COLORS = {
+  income: "#52c41a",
+  expense: "#ff4d4f",
+  balance: "#1677ff",
+};
 
 /* ---------- PIE LABEL ---------- */
 const renderPieLabel = ({ name, percent }) =>
-  `${name} (${(percent * 100).toFixed(0)}%)`;
+  `${name} ${(percent * 100).toFixed(0)}%`;
 
 export default function Dashboard() {
   const [data, setData] = useState([]);
@@ -69,195 +78,198 @@ export default function Dashboard() {
   const balance = income - expense;
 
   /* ---------- DAILY / WEEKLY GROUP ---------- */
-  const grouped = {};
-  data.forEach(e => {
-    const key =
-      groupBy === "daily"
-        ? dayjs(e.entryDate).format("DD MMM")
-        : `W${dayjs(e.entryDate).week()}`;
+  const groupedData = useMemo(() => {
+    const grouped = {};
+    data.forEach(e => {
+      const key =
+        groupBy === "daily"
+          ? dayjs(e.entryDate).format("DD MMM")
+          : `W${dayjs(e.entryDate).week()}`;
 
-    if (!grouped[key]) grouped[key] = { date: key, income: 0, expense: 0 };
-    e.type === "IN"
-      ? (grouped[key].income += e.amount)
-      : (grouped[key].expense += e.amount);
-  });
-
-  const groupedData = Object.values(grouped);
+      if (!grouped[key]) grouped[key] = { date: key, income: 0, expense: 0 };
+      e.type === "IN"
+        ? (grouped[key].income += e.amount)
+        : (grouped[key].expense += e.amount);
+    });
+    return Object.values(grouped);
+  }, [data, groupBy]);
 
   /* ---------- BALANCE TREND ---------- */
-  let runningBalance = 0;
+  let running = 0;
   const balanceTrend = groupedData.map(d => {
-    runningBalance += d.income - d.expense;
-    return { date: d.date, balance: runningBalance };
+    running += d.income - d.expense;
+    return { date: d.date, balance: running };
   });
 
-  /* ---------- CATEGORY & PAYMENT PIE ---------- */
-  const categoryMap = {};
-  const paymentMap = {};
-
-  data.forEach(e => {
-    if (e.type === "OUT") {
-      if (e.category) {
-        categoryMap[e.category] =
-          (categoryMap[e.category] || 0) + e.amount;
-      }
-      if (e.paymentMode) {
-        paymentMap[e.paymentMode] =
-          (paymentMap[e.paymentMode] || 0) + e.amount;
-      }
-    }
-  });
-
-  const categoryData = Object.keys(categoryMap).map(k => ({
-    name: k.replace("_", " "),
-    value: categoryMap[k]
-  }));
-
-  const paymentData = Object.keys(paymentMap).map(k => ({
-    name: k.replace("_", " "),
-    value: paymentMap[k]
-  }));
-
-  /* ---------- MONTHLY COMPARISON ---------- */
-  const monthlyComparison = useMemo(() => {
+  /* ---------- PIE DATA ---------- */
+  const categoryData = useMemo(() => {
     const map = {};
-
     data.forEach(e => {
-      const month = dayjs(e.entryDate).format("MMM YYYY");
-
-      if (!map[month]) {
-        map[month] = { month, income: 0, expense: 0 };
+      if (e.type === "OUT" && e.category) {
+        map[e.category] = (map[e.category] || 0) + e.amount;
       }
-
-      e.type === "IN"
-        ? (map[month].income += e.amount)
-        : (map[month].expense += e.amount);
     });
+    return Object.keys(map).map(k => ({
+      name: k.replace("_", " "),
+      value: map[k],
+    }));
+  }, [data]);
 
-    return Object.values(map).sort(
-      (a, b) => dayjs(a.month).valueOf() - dayjs(b.month).valueOf()
-    );
+  const paymentData = useMemo(() => {
+    const map = {};
+    data.forEach(e => {
+      if (e.type === "OUT" && e.paymentMode) {
+        map[e.paymentMode] = (map[e.paymentMode] || 0) + e.amount;
+      }
+    });
+    return Object.keys(map).map(k => ({
+      name: k.replace("_", " "),
+      value: map[k],
+    }));
   }, [data]);
 
   return (
     <div className="dashboard-page">
       {/* ---------- HEADER ---------- */}
-      <div className="dashboard-top">
-        <Title level={3}>Dashboard</Title>
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          background: "#fff",
+          paddingBottom: 16,
+          marginBottom: 24,
+        }}
+      >
+        <Row justify="space-between" align="middle">
+          <div>
+            <Title level={3} style={{ marginBottom: 0 }}>
+              Dashboard
+            </Title>
+            <Text type="secondary">Your financial overview</Text>
+          </div>
 
-        <div className="dashboard-actions">
-          <DatePicker.RangePicker
-            onChange={d =>
-              d
-                ? setRange([
-                    d[0].startOf("day").toISOString(),
-                    d[1].endOf("day").toISOString()
-                  ])
-                : setRange([])
-            }
-          />
+          <Space wrap>
+            <DatePicker.RangePicker
+              size="large"
+              onChange={d =>
+                d
+                  ? setRange([
+                      d[0].startOf("day").toISOString(),
+                      d[1].endOf("day").toISOString(),
+                    ])
+                  : setRange([])
+              }
+            />
 
-          <Radio.Group
-            value={groupBy}
-            onChange={e => setGroupBy(e.target.value)}
-          >
-            <Radio.Button value="daily">Daily</Radio.Button>
-            <Radio.Button value="weekly">Weekly</Radio.Button>
-          </Radio.Group>
+            <Radio.Group
+              size="large"
+              value={groupBy}
+              onChange={e => setGroupBy(e.target.value)}
+            >
+              <Radio.Button value="daily">Daily</Radio.Button>
+              <Radio.Button value="weekly">Weekly</Radio.Button>
+            </Radio.Group>
 
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => nav("/add")}
-          >
-            Add
-          </Button>
-        </div>
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={() => nav("/add")}
+            >
+              Add
+            </Button>
+          </Space>
+        </Row>
       </div>
 
       {/* ---------- STATS ---------- */}
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
-          <Card className="stat-card income">
-            <Statistic title="Income" value={income} prefix={<ArrowUpOutlined />} />
+          <Card bordered={false} style={{ borderRadius: 16 }}>
+            <Statistic
+              title="Income"
+              value={income}
+              valueStyle={{ color: COLORS.income }}
+              prefix={<ArrowUpOutlined />}
+            />
           </Card>
         </Col>
 
         <Col xs={24} md={8}>
-          <Card className="stat-card expense">
-            <Statistic title="Expense" value={expense} prefix={<ArrowDownOutlined />} />
+          <Card bordered={false} style={{ borderRadius: 16 }}>
+            <Statistic
+              title="Expense"
+              value={expense}
+              valueStyle={{ color: COLORS.expense }}
+              prefix={<ArrowDownOutlined />}
+            />
           </Card>
         </Col>
 
         <Col xs={24} md={8}>
-          <Card className="stat-card balance">
-            <Statistic title="Balance" value={balance} prefix={<WalletOutlined />} />
+          <Card bordered={false} style={{ borderRadius: 16 }}>
+            <Statistic
+              title="Balance"
+              value={balance}
+              valueStyle={{ color: COLORS.balance }}
+              prefix={<WalletOutlined />}
+            />
           </Card>
         </Col>
       </Row>
 
-      {/* ---------- DAILY / WEEKLY ---------- */}
-      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+      {/* ---------- CHARTS ---------- */}
+      <Row gutter={[16, 16]} style={{ marginTop: 32 }}>
         <Col xs={24} lg={12}>
-          <Card title="Expense Overview">
-            <ResponsiveContainer height={280}>
-              <BarChart data={groupedData}>
-                <XAxis dataKey="date" />
-                <Tooltip />
-                <Bar dataKey="expense" fill="#ff4d4f" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+            <Card title="Expense Overview" bordered={false} style={{ borderRadius: 16 }}>
+              <ResponsiveContainer height={280}>
+                <BarChart data={groupedData}>
+                  <XAxis dataKey="date" />
+                  <Tooltip />
+                  <Bar
+                    dataKey="expense"
+                    fill={COLORS.expense}
+                    radius={[6, 6, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          </motion.div>
         </Col>
 
         <Col xs={24} lg={12}>
-          <Card title="Balance Trend">
-            <ResponsiveContainer height={280}>
-              <LineChart data={balanceTrend}>
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="balance"
-                  stroke="#1677ff"
-                  strokeWidth={3}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* ---------- MONTHLY COMPARISON ---------- */}
-      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
-        <Col xs={24}>
-          <Card title="Monthly Income vs Expense">
-            <ResponsiveContainer height={320}>
-              <BarChart data={monthlyComparison}>
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={v => `₹ ${v}`} />
-                <Legend />
-                <Bar dataKey="income" fill="#52c41a" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="expense" fill="#ff4d4f" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+            <Card title="Balance Trend" bordered={false} style={{ borderRadius: 16 }}>
+              <ResponsiveContainer height={280}>
+                <LineChart data={balanceTrend}>
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="balance"
+                    stroke={COLORS.balance}
+                    strokeWidth={3}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </Card>
+          </motion.div>
         </Col>
       </Row>
 
       {/* ---------- PIE CHARTS ---------- */}
-      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+      <Row gutter={[16, 16]} style={{ marginTop: 32 }}>
         <Col xs={24} md={12}>
-          <Card title="Expense by Category">
+          <Card title="Expense by Category" bordered={false} style={{ borderRadius: 16 }}>
             <ResponsiveContainer height={280}>
               <PieChart>
                 <Pie
                   data={categoryData}
                   dataKey="value"
-                  nameKey="name"
                   outerRadius={100}
                   label={renderPieLabel}
                 >
@@ -276,13 +288,12 @@ export default function Dashboard() {
         </Col>
 
         <Col xs={24} md={12}>
-          <Card title="Expense by Payment Mode">
+          <Card title="Expense by Payment Mode" bordered={false} style={{ borderRadius: 16 }}>
             <ResponsiveContainer height={280}>
               <PieChart>
                 <Pie
                   data={paymentData}
                   dataKey="value"
-                  nameKey="name"
                   outerRadius={100}
                   label={renderPieLabel}
                 >
