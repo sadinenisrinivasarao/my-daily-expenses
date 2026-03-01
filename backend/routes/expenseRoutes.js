@@ -2,15 +2,16 @@ const router = require("express").Router();
 const Expense = require("../models/Expense");
 const multer = require("multer");
 
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ storage: multer.memoryStorage() });
 
 /* CREATE */
 router.post("/", upload.single("receipt"), async (req, res) => {
   try {
     const body = { ...req.body };
 
+    // If a file is uploaded keep metadata (file buffer is in `req.file.buffer`).
     if (req.file) {
-      body.receiptPath = req.file.path;
+      body.receiptOriginalName = req.file.originalname;
     }
 
     if (body.amount) body.amount = Number(body.amount);
