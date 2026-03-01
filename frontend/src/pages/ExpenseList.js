@@ -291,7 +291,14 @@ export default function ExpenseList() {
                       ) : (
                         items.map(e => (
                           <Card key={e._id} size="small" style={{ marginBottom: 8 }}>
-                            {e.description} — ₹ {e.amount}
+                            <Row justify="space-between" align="middle">
+                              <div>
+                                {e.description} — ₹ {e.amount}
+                              </div>
+                              <Button type="link" onClick={() => nav(`/edit/${e._id}`)}>
+                                Edit
+                              </Button>
+                            </Row>
                           </Card>
                         ))
                       )}
