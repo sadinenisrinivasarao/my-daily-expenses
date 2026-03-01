@@ -388,6 +388,9 @@ function SwipeableItem({ item, onDelete, onEdit }) {
           paddingLeft: 8,
           background: "transparent",
           zIndex: 1,
+          transform: `translateX(${translate - actionWidth}px)`,
+          transition: "transform 0.12s ease",
+          pointerEvents: translate > 0 ? "auto" : "none",
         }}
       >
         <Button type="primary" size="small" onClick={onEdit}>
@@ -413,9 +416,11 @@ function SwipeableItem({ item, onDelete, onEdit }) {
             <div>
               {item.description} — ₹ {item.amount}
             </div>
-            <Button type="link" onClick={onEdit}>
-              Edit
-            </Button>
+            {translate === 0 && (
+              <Button type="link" onClick={onEdit}>
+                Edit
+              </Button>
+            )}
           </Row>
         </Card>
       </div>
