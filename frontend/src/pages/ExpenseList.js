@@ -355,3 +355,80 @@ export default function ExpenseList() {
     </div>
   );
 }
+
+/* ---------- SWIPEABLE MOBILE ITEM ---------- */
+function SwipeableItem({ item, onDelete, onEdit }) {
+  const [translate, setTranslate] = useState(0);
+  const startX = useRef(0);
+  const actionWidth = 120;
+
+  const onTouchStart = e => {
+    startX.current = e.touches[0].clientX;
+  };
+
+  const onTouchMove = e => {
+    const dx = e.touches[0].clientX - startX.current;
+    if (dx > 0) {
+      setTranslate(Math.min(dx, actionWidth));
+    } else {
+      setTranslate(0);
+    }
+  };
+
+  const onTouchEnd = () => {
+    if (translate > actionWidth / 2) {
+      setTranslate(actionWidth);
+    } else {
+      setTranslate(0);
+    }
+  };
+
+  return (
+    <div style={{ position: "relative", overflow: "hidden" }}>
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: actionWidth,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          paddingLeft: 8,
+          background: "transparent",
+          zIndex: 1,
+        }}
+      >
+        <Button type="primary" size="small" onClick={onEdit}>
+          Edit
+        </Button>
+        <Button danger size="small" onClick={() => onDelete(item._id)}>
+          Delete
+        </Button>
+      </div>
+
+      <div
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        style={{
+          transform: `translateX(${translate}px)`,
+          transition: "transform 0.12s ease",
+          zIndex: 2,
+        }}
+      >
+        <Card size="small" style={{ marginBottom: 8 }}>
+          <Row justify="space-between" align="middle">
+            <div>
+              {item.description} — ₹ {item.amount}
+            </div>
+            <Button type="link" onClick={onEdit}>
+              Edit
+            </Button>
+          </Row>
+        </Card>
+      </div>
+    </div>
+  );
+}
