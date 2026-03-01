@@ -1,10 +1,22 @@
 const router = require("express").Router();
 const Expense = require("../models/Expense");
+const multer = require("multer");
+
+const upload = multer({ dest: "uploads/" });
 
 /* CREATE */
-router.post("/", async (req, res) => {
+router.post("/", upload.single("receipt"), async (req, res) => {
   try {
-    const expense = new Expense(req.body);
+    const body = { ...req.body };
+
+    if (req.file) {
+      body.receiptPath = req.file.path;
+    }
+
+    if (body.amount) body.amount = Number(body.amount);
+    if (body.entryDate) body.entryDate = new Date(body.entryDate);
+
+    const expense = new Expense(body);
     await expense.save();
     res.json(expense);
   } catch (err) {
@@ -36,9 +48,24 @@ router.get("/", async (req, res) => {
 /* SUMMARY */
 router.get("/summary", async (req, res) => {
   try {
-    const agg = await Expense.aggregate([
-      { $group: { _id: "$type", total: { $sum: "$amount" } } },
-    ]);
+    const { startDate, endDate } = req.query;
+
+    const pipeline = [];
+
+    if (startDate && endDate) {
+      pipeline.push({
+        $match: {
+          entryDate: {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate),
+          },
+        },
+      });
+    }
+
+    pipeline.push({ $group: { _id: "$type", total: { $sum: "$amount" } } });
+
+    const agg = await Expense.aggregate(pipeline);
 
     let totalIn = 0;
     let totalOut = 0;

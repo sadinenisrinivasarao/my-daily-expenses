@@ -52,9 +52,15 @@ export default function AddExpense() {
 
   /* ---------- LOAD CURRENT BALANCE ---------- */
   useEffect(() => {
-    api.get("/expenses/summary").then(res => {
-      setCurrentBalance(res.data.balance || 0);
-    }).catch(() => {});
+    const start = dayjs().startOf("month").startOf("day").toISOString();
+    const end = dayjs().endOf("month").endOf("day").toISOString();
+
+    api
+      .get(`/expenses/summary?startDate=${encodeURIComponent(start)}&endDate=${encodeURIComponent(end)}`)
+      .then((res) => {
+        setCurrentBalance(res.data.balance || 0);
+      })
+      .catch(() => {});
   }, []);
 
   /* ---------- BALANCE PREVIEW ---------- */
