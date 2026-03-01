@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   Table,
   Card,
@@ -101,20 +101,6 @@ export default function ExpenseList() {
   }, [selectedMonth, selectedYear]);
 
   /* ---------- FETCH DATA ---------- */
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      try {
-        setLoading(true);
-        const res = await api.get("/expenses");
-        setData(res.data);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchExpenses();
-  }, []);
-
   const fetchExpenses = async () => {
     try {
       setLoading(true);
@@ -124,6 +110,10 @@ export default function ExpenseList() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
 
   const handleDelete = async id => {
     try {
