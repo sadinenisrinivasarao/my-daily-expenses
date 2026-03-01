@@ -102,12 +102,37 @@ export default function ExpenseList() {
 
   /* ---------- FETCH DATA ---------- */
   useEffect(() => {
-    setLoading(true);
-    api.get("/expenses").then(res => {
-      setData(res.data);
-      setLoading(false);
-    });
+    const fetchExpenses = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/expenses");
+        setData(res.data);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExpenses();
   }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/expenses");
+      setData(res.data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async id => {
+    try {
+      await api.delete(`/expenses/${id}`);
+      setData(d => d.filter(x => x._id !== id));
+    } catch (err) {
+      // swallow for now
+    }
+  };
 
   /* ---------- FILTER ---------- */
   const filteredData = useMemo(() => {
@@ -290,16 +315,12 @@ export default function ExpenseList() {
                         />
                       ) : (
                         items.map(e => (
-                          <Card key={e._id} size="small" style={{ marginBottom: 8 }}>
-                            <Row justify="space-between" align="middle">
-                              <div>
-                                {e.description} — ₹ {e.amount}
-                              </div>
-                              <Button type="link" onClick={() => nav(`/edit/${e._id}`)}>
-                                Edit
-                              </Button>
-                            </Row>
-                          </Card>
+                          <SwipeableItem
+                            key={e._id}
+                            item={e}
+                            onDelete={handleDelete}
+                            onEdit={() => nav(`/edit/${e._id}`)}
+                          />
                         ))
                       )}
                     </motion.div>
