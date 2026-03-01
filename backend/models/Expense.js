@@ -34,6 +34,7 @@ const expenseSchema = new mongoose.Schema(
         "OTHER_INCOME",
         "OTHERS",
         "FAMILY",
+        "ENTERTAINMENT",
       ],
       required: true,
     },
