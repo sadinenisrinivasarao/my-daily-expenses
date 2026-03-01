@@ -33,13 +33,14 @@ const expenseSchema = new mongoose.Schema(
         "SALARY",
         "OTHER_INCOME",
         "OTHERS",
+        "FAMILY",
       ],
       required: true,
     },
 
     paymentMode: {
       type: String,
-      enum: ["CASH", "CREDIT_CARD", "BANK_TRANSFER"],
+      enum: ["CASH", "CREDIT_CARD", "BANK_TRANSFER", "REFUND"],
       required: true,
     },
 
