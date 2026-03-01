@@ -10,6 +10,8 @@ import {
   Space,
   Grid,
   Divider,
+  Typography,
+  Spin,
 } from "antd";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
@@ -24,18 +26,28 @@ import {
   DollarOutlined,
   AppstoreOutlined,
   DownOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 
 const { RangePicker } = DatePicker;
 const { useBreakpoint } = Grid;
+const { Title, Text } = Typography;
 
-/* ---------- CATEGORY THEME ---------- */
+/* ---------- CATEGORY THEME (INCLUDING FAMILY) ---------- */
 const categoryTheme = {
   FOOD: { color: "#1677ff", bg: "#e6f4ff", icon: <CoffeeOutlined /> },
   ACCOMMODATION: { color: "#722ed1", bg: "#f9f0ff", icon: <HomeOutlined /> },
   SHOPPING: { color: "#fa8c16", bg: "#fff7e6", icon: <ShoppingOutlined /> },
   PERSONAL_CARE: { color: "#13c2c2", bg: "#e6fffb", icon: <SkinOutlined /> },
   TRAVEL: { color: "#52c41a", bg: "#f6ffed", icon: <CarOutlined /> },
+
+  /* ✅ FAMILY CATEGORY */
+  FAMILY: {
+    color: "#eb2f96",
+    bg: "#fff0f6",
+    icon: <TeamOutlined />,
+  },
+
   SALARY: { color: "#389e0d", bg: "#f6ffed", icon: <DollarOutlined /> },
   OTHER_INCOME: { color: "#389e0d", bg: "#f6ffed", icon: <DollarOutlined /> },
   OTHERS: { color: "#595959", bg: "#fafafa", icon: <AppstoreOutlined /> },
@@ -46,19 +58,61 @@ export default function ExpenseList() {
   const [paymentMode, setPaymentMode] = useState();
   const [dateRange, setDateRange] = useState([]);
   const [openCats, setOpenCats] = useState({});
+  const [loading, setLoading] = useState(false);
+
   const nav = useNavigate();
   const screens = useBreakpoint();
 
+  /* ---------- MONTH + YEAR ---------- */
+  const currentYear = dayjs().year();
+  const currentMonth = dayjs().month();
+
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+
+  const monthOptions = dayjs.months().map((m, i) => ({
+    label: m,
+    value: i,
+  }));
+
+  const yearOptions = Array.from({ length: 5 }).map((_, i) => {
+    const y = currentYear - i;
+    return { label: y, value: y };
+  });
+
+  /* ---------- AUTO SET MONTH RANGE ---------- */
   useEffect(() => {
-    api.get("/expenses").then(res => setData(res.data));
+    const start = dayjs()
+      .year(selectedYear)
+      .month(selectedMonth)
+      .startOf("month")
+      .startOf("day");
+
+    const end = dayjs()
+      .year(selectedYear)
+      .month(selectedMonth)
+      .endOf("month")
+      .endOf("day");
+
+    setDateRange([start, end]);
+  }, [selectedMonth, selectedYear]);
+
+  /* ---------- FETCH DATA ---------- */
+  useEffect(() => {
+    setLoading(true);
+    api.get("/expenses").then(res => {
+      setData(res.data);
+      setLoading(false);
+    });
   }, []);
 
   /* ---------- FILTER ---------- */
   const filteredData = useMemo(() => {
     return data.filter(e => {
       const pmMatch = paymentMode ? e.paymentMode === paymentMode : true;
+
       const dateMatch =
-        dateRange?.length === 2 && e.entryDate
+        dateRange?.length === 2
           ? dayjs(e.entryDate).isBetween(
               dateRange[0],
               dateRange[1],
@@ -66,11 +120,12 @@ export default function ExpenseList() {
               "[]"
             )
           : true;
+
       return pmMatch && dateMatch;
     });
   }, [data, paymentMode, dateRange]);
 
-  /* ---------- GROUP ---------- */
+  /* ---------- GROUP BY CATEGORY ---------- */
   const groupedByCategory = useMemo(() => {
     return filteredData.reduce((acc, e) => {
       const cat = e.category || "OTHERS";
@@ -83,15 +138,16 @@ export default function ExpenseList() {
   /* ---------- NET TOTAL ---------- */
   const monthlyTotal = useMemo(() => {
     return filteredData.reduce((sum, e) => {
-      const amt = e.amount || 0;
-      return e.type === "IN" ? sum + amt : sum - amt;
+      return e.type === "IN"
+        ? sum + (e.amount || 0)
+        : sum - (e.amount || 0);
     }, 0);
   }, [filteredData]);
 
   const toggleCategory = cat =>
     setOpenCats(p => ({ ...p, [cat]: !p[cat] }));
 
-  /* ---------- TABLE ---------- */
+  /* ---------- TABLE COLUMNS ---------- */
   const columns = [
     {
       title: "Date",
@@ -109,15 +165,6 @@ export default function ExpenseList() {
       ),
     },
     {
-      title: "Type",
-      dataIndex: "type",
-      render: t => (
-        <span style={{ color: t === "IN" ? "#52c41a" : "#ff4d4f" }}>
-          {t === "IN" ? "Income" : "Paid Out"}
-        </span>
-      ),
-    },
-    {
       title: "Action",
       render: (_, r) => (
         <Button type="link" onClick={() => nav(`/edit/${r._id}`)}>
@@ -127,83 +174,45 @@ export default function ExpenseList() {
     },
   ];
 
-  /* ---------- MOBILE CARDS ---------- */
-  const MobileCards = ({ items }) => (
-    <Space direction="vertical" style={{ width: "100%" }}>
-      {items.map(e => {
-        const theme = categoryTheme[e.category] || categoryTheme.OTHERS;
-
-        return (
-          <motion.div
-            key={e._id}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            style={{ display: "flex", overflowX: "auto", borderRadius: 12 }}
-          >
-            <Card
-              size="small"
-              style={{ minWidth: "100%", background: theme.bg }}
-            >
-              <Row justify="space-between">
-                <strong>{e.description}</strong>
-                <strong
-                  style={{ color: e.type === "IN" ? "#52c41a" : "#ff4d4f" }}
-                >
-                  ₹ {e.amount}
-                </strong>
-              </Row>
-              <div style={{ fontSize: 12 }}>
-                {theme.icon} {e.category} •{" "}
-                {e.paymentMode?.replace("_", " ")}
-              </div>
-              <div style={{ fontSize: 12, color: "#777" }}>
-                {dayjs(e.entryDate).format("DD MMM YYYY")}
-              </div>
-            </Card>
-
-            <div
-              style={{
-                minWidth: 140,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-              }}
-            >
-              <Button type="link" onClick={() => nav(`/edit/${e._id}`)}>
-                Edit
-              </Button>
-              <Button danger type="link">
-                Delete
-              </Button>
-            </div>
-          </motion.div>
-        );
-      })}
-    </Space>
-  );
-
   return (
     <div className="page">
-      <Card title="Transactions" style={{ borderRadius: 16 }}>
-        {/* ---------- STICKY FILTER ---------- */}
-        <div
-          style={{
-            position: "sticky",
-            top: 0,
-            zIndex: 10,
-            background: "#fff",
-            paddingBottom: 12,
-            marginBottom: 16,
-          }}
-        >
-          <Row gutter={[12, 12]}>
-            <Col xs={24} sm={12} md={8}>
+      <Spin spinning={loading}>
+        <Card style={{ borderRadius: 18 }}>
+          {/* ---------- HEADER ---------- */}
+          <Row justify="space-between" align="middle">
+            <div>
+              <Title level={3} style={{ margin: 0 }}>
+                Monthly Transactions
+              </Title>
+              <Text type="secondary">
+                {dateRange.length
+                  ? dayjs(dateRange[0]).format("MMMM YYYY")
+                  : ""}
+              </Text>
+            </div>
+
+            <Space wrap>
+              <Select
+                size="large"
+                options={monthOptions}
+                value={selectedMonth}
+                onChange={setSelectedMonth}
+                style={{ width: 140 }}
+              />
+
+              <Select
+                size="large"
+                options={yearOptions}
+                value={selectedYear}
+                onChange={setSelectedYear}
+                style={{ width: 120 }}
+              />
+
               <Select
                 size="large"
                 allowClear
                 placeholder="Payment mode"
-                style={{ width: "100%" }}
+                style={{ width: 160 }}
                 onChange={setPaymentMode}
                 options={[
                   { label: "Cash", value: "CASH" },
@@ -211,90 +220,107 @@ export default function ExpenseList() {
                   { label: "Bank Transfer", value: "BANK_TRANSFER" },
                 ]}
               />
-            </Col>
-            <Col xs={24} sm={12} md={10}>
+
               <RangePicker
                 size="large"
-                style={{ width: "100%" }}
                 onChange={setDateRange}
               />
-            </Col>
+            </Space>
           </Row>
-        </div>
 
-        {/* ---------- CATEGORIES ---------- */}
-        {Object.keys(groupedByCategory).map(cat => {
-          const items = groupedByCategory[cat];
-          const theme = categoryTheme[cat] || categoryTheme.OTHERS;
-          const total = items.reduce((s, e) => s + (e.amount || 0), 0);
-          const isOpen = openCats[cat] !== false;
+          <Divider />
 
-          return (
-            <Card
-              key={cat}
-              type="inner"
-              style={{ marginBottom: 16, borderRadius: 14 }}
-              title={
-                <Row
-                  justify="space-between"
-                  align="middle"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => toggleCategory(cat)}
-                >
-                  <Space>
-                    <span style={{ color: theme.color }}>{theme.icon}</span>
-                    <strong>{cat.replace("_", " ")}</strong>
-                  </Space>
-                  <Space>
-                    <span style={{ color: theme.color }}>₹ {total}</span>
-                    <motion.span
-                      animate={{ rotate: isOpen ? 180 : 0 }}
-                      transition={{ type: "spring", stiffness: 200 }}
-                    >
-                      <DownOutlined />
-                    </motion.span>
-                  </Space>
-                </Row>
-              }
-            >
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ type: "spring", damping: 22 }}
+          {/* ---------- CATEGORY DASHBOARD CARDS ---------- */}
+          {Object.keys(groupedByCategory).map(cat => {
+            const items = groupedByCategory[cat];
+            const theme = categoryTheme[cat] || categoryTheme.OTHERS;
+            const total = items.reduce(
+              (s, e) => s + (e.amount || 0),
+              0
+            );
+            const isOpen = openCats[cat] !== false;
+
+            return (
+              <Card
+                key={cat}
+                type="inner"
+                style={{ marginBottom: 16, borderRadius: 14 }}
+                title={
+                  <Row
+                    justify="space-between"
+                    onClick={() => toggleCategory(cat)}
+                    style={{ cursor: "pointer" }}
                   >
-                    {screens.md ? (
-                      <Table
-                        rowKey="_id"
-                        columns={columns}
-                        dataSource={items}
-                        pagination={false}
-                      />
-                    ) : (
-                      <MobileCards items={items} />
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </Card>
-          );
-        })}
+                    <Space>
+                      <span style={{ color: theme.color }}>
+                        {theme.icon}
+                      </span>
+                      <strong>{cat.replace("_", " ")}</strong>
+                    </Space>
 
-        <Divider />
-        <Row justify="space-between">
-          <strong>Net Total ({dayjs().format("MMMM YYYY")})</strong>
-          <strong
-            style={{
-              color: monthlyTotal >= 0 ? "#52c41a" : "#ff4d4f",
-              fontSize: 18,
-            }}
-          >
-            ₹ {monthlyTotal}
-          </strong>
-        </Row>
-      </Card>
+                    <Space>
+                      <span style={{ color: theme.color }}>
+                        ₹ {total}
+                      </span>
+                      <motion.span
+                        animate={{ rotate: isOpen ? 180 : 0 }}
+                      >
+                        <DownOutlined />
+                      </motion.span>
+                    </Space>
+                  </Row>
+                }
+              >
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                    >
+                      {screens.md ? (
+                        <Table
+                          rowKey="_id"
+                          columns={columns}
+                          dataSource={items}
+                          pagination={false}
+                        />
+                      ) : (
+                        items.map(e => (
+                          <Card key={e._id} size="small" style={{ marginBottom: 8 }}>
+                            {e.description} — ₹ {e.amount}
+                          </Card>
+                        ))
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Card>
+            );
+          })}
+
+          <Divider />
+
+          {/* ---------- NET TOTAL ---------- */}
+          <Row justify="space-between">
+            <strong>
+              Net Total (
+              {dateRange.length
+                ? dayjs(dateRange[0]).format("MMMM YYYY")
+                : ""}
+              )
+            </strong>
+            <strong
+              style={{
+                color: monthlyTotal >= 0 ? "#52c41a" : "#ff4d4f",
+                fontSize: 18,
+              }}
+            >
+              ₹ {monthlyTotal}
+            </strong>
+          </Row>
+        </Card>
+      </Spin>
     </div>
   );
 }

@@ -33,6 +33,29 @@ router.get("/", async (req, res) => {
 });
 
 /* READ BY ID */
+/* SUMMARY */
+router.get("/summary", async (req, res) => {
+  try {
+    const agg = await Expense.aggregate([
+      { $group: { _id: "$type", total: { $sum: "$amount" } } },
+    ]);
+
+    let totalIn = 0;
+    let totalOut = 0;
+
+    agg.forEach((g) => {
+      if (g._id === "IN") totalIn = g.total || 0;
+      if (g._id === "OUT") totalOut = g.total || 0;
+    });
+
+    const balance = (totalIn || 0) - (totalOut || 0);
+
+    res.json({ totalIn, totalOut, balance });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const expense = await Expense.findById(req.params.id);
