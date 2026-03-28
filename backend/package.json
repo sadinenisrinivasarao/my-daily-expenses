@@ -1,4 +1,10 @@
 {
+  "name": "expense-tracker-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.js",
+    "migrate:owners": "node scripts/migrateOwners.js"
+  },
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",

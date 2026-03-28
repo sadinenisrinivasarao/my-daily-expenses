@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
+import { getAuth } from "../utils/auth";
 import {
   Card,
   Row,
@@ -112,13 +113,20 @@ export default function Dashboard() {
     const fetchData = async () => {
       setLoading(true);
       try {
+        const auth = getAuth();
+        const email = auth?.email;
+
+        const qsCurrent = `startDate=${encodeURIComponent(range[0])}&endDate=${encodeURIComponent(range[1])}${
+          email ? `&email=${encodeURIComponent(email)}` : ""
+        }`;
+
+        const qsPrev = `startDate=${encodeURIComponent(previousMonthRange[0])}&endDate=${encodeURIComponent(previousMonthRange[1])}${
+          email ? `&email=${encodeURIComponent(email)}` : ""
+        }`;
+
         const [currentRes, prevRes] = await Promise.all([
-          api.get(
-            `/expenses?startDate=${range[0]}&endDate=${range[1]}`
-          ),
-          api.get(
-            `/expenses?startDate=${previousMonthRange[0]}&endDate=${previousMonthRange[1]}`
-          ),
+          api.get(`/expenses?${qsCurrent}`),
+          api.get(`/expenses?${qsPrev}`),
         ]);
 
         setData(currentRes.data);
