@@ -20,6 +20,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import { getAuth } from "../utils/auth";
 import { motion } from "framer-motion";
 import dayjs from "dayjs";
 
@@ -54,9 +55,14 @@ export default function AddExpense() {
   useEffect(() => {
     const start = dayjs().startOf("month").startOf("day").toISOString();
     const end = dayjs().endOf("month").endOf("day").toISOString();
+    const auth = getAuth();
+    const email = auth?.email;
 
-    api
-      .get(`/expenses/summary?startDate=${encodeURIComponent(start)}&endDate=${encodeURIComponent(end)}`)
+    const qs = `startDate=${encodeURIComponent(start)}&endDate=${encodeURIComponent(end)}${
+      email ? `&email=${encodeURIComponent(email)}` : ""
+    }`;
+
+    api.get(`/expenses/summary?${qs}`)
       .then((res) => {
         setCurrentBalance(res.data.balance || 0);
       })
@@ -86,6 +92,9 @@ export default function AddExpense() {
           formData.append(key, values[key]);
         }
       });
+
+      const auth = getAuth();
+      if (auth?.email) formData.append("email", auth.email);
 
       await api.post("/expenses", formData, {
         headers: { "Content-Type": "multipart/form-data" },

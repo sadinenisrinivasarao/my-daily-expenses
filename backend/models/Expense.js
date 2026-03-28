@@ -50,6 +50,11 @@ const expenseSchema = new mongoose.Schema(
       required: true,
       default: Date.now,
     },
+    owner: {
+      type: String,
+      required: true,
+      trim: true,
+    },
   },
   {
     timestamps: true, // adds createdAt & updatedAt

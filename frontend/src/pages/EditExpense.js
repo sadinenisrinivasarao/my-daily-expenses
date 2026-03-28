@@ -22,6 +22,7 @@ import {
   AppstoreOutlined,
 } from "@ant-design/icons";
 import api from "../services/api";
+import { getAuth } from "../utils/auth";
 import dayjs from "dayjs";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -60,7 +61,10 @@ export default function EditExpense() {
 
   /* ---------- LOAD ---------- */
   useEffect(() => {
-    api.get(`/expenses/${id}`).then(res => {
+    const auth = getAuth();
+    const email = auth?.email;
+    const qs = email ? `?email=${encodeURIComponent(email)}` : "";
+    api.get(`/expenses/${id}${qs}`).then(res => {
       setCategory(res.data.category || "OTHERS");
       form.setFieldsValue({
         ...res.data,
@@ -73,7 +77,10 @@ export default function EditExpense() {
   const onFinish = async v => {
     try {
       setLoading(true);
-      await api.put(`/expenses/${id}`, {
+      const auth = getAuth();
+      const email = auth?.email;
+      const qs = email ? `?email=${encodeURIComponent(email)}` : "";
+      await api.put(`/expenses/${id}${qs}`, {
         ...v,
         entryDate: v.entryDate.toDate(),
       });
@@ -94,7 +101,10 @@ export default function EditExpense() {
       okType: "danger",
       onOk: async () => {
         setDeleting(true);
-        await api.delete(`/expenses/${id}`);
+        const auth = getAuth();
+        const email = auth?.email;
+        const qs = email ? `?email=${encodeURIComponent(email)}` : "";
+        await api.delete(`/expenses/${id}${qs}`);
         setTimeout(() => nav("/dashboard"), 1200);
       },
     });

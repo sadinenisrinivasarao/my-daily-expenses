@@ -16,6 +16,13 @@ router.post("/", upload.single("receipt"), async (req, res) => {
 
     if (body.amount) body.amount = Number(body.amount);
     if (body.entryDate) body.entryDate = new Date(body.entryDate);
+    // Ensure owner/email is set on the expense (expect client to provide `email`)
+    if (!body.email && !body.owner) {
+      return res.status(400).json({ error: "Missing owner/email" });
+    }
+
+    // normalize to `owner`
+    body.owner = body.owner || body.email;
 
     const expense = new Expense(body);
     await expense.save();
@@ -29,7 +36,12 @@ router.post("/", upload.single("receipt"), async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
+    const { email } = req.query;
     let filter = {};
+
+    if (email) {
+      filter.owner = email;
+    }
 
     if (startDate && endDate) {
       filter.entryDate = {
@@ -49,19 +61,25 @@ router.get("/", async (req, res) => {
 /* SUMMARY */
 router.get("/summary", async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, email } = req.query;
 
     const pipeline = [];
 
+    const match = {};
+
     if (startDate && endDate) {
-      pipeline.push({
-        $match: {
-          entryDate: {
-            $gte: new Date(startDate),
-            $lte: new Date(endDate),
-          },
-        },
-      });
+      match.entryDate = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    if (email) {
+      match.owner = email;
+    }
+
+    if (Object.keys(match).length) {
+      pipeline.push({ $match: match });
     }
 
     pipeline.push({ $group: { _id: "$type", total: { $sum: "$amount" } } });
@@ -96,11 +114,24 @@ router.get("/:id", async (req, res) => {
 /* UPDATE */
 router.put("/:id", async (req, res) => {
   try {
+    const { email } = req.query;
+
+    const existing = await Expense.findById(req.params.id);
+    if (!existing) return res.status(404).json({ error: "Expense not found" });
+
+    if (email && existing.owner !== email) {
+      return res.status(403).json({ error: "Not authorized to update this expense" });
+    }
+
+    // Prevent owner change via update
+    if (req.body.owner) delete req.body.owner;
+
     const updated = await Expense.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
     );
+
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -110,16 +141,18 @@ router.put("/:id", async (req, res) => {
 /* DELETE */
 router.delete("/:id", async (req, res) => {
   try {
-    const deleted = await Expense.findByIdAndDelete(req.params.id);
+    const { email } = req.query;
 
-    if (!deleted) {
-      return res.status(404).json({ error: "Expense not found" });
+    const existing = await Expense.findById(req.params.id);
+    if (!existing) return res.status(404).json({ error: "Expense not found" });
+
+    if (email && existing.owner !== email) {
+      return res.status(403).json({ error: "Not authorized to delete this expense" });
     }
 
-    res.json({
-      message: "Expense deleted successfully",
-      expense: deleted
-    });
+    const deleted = await Expense.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Expense deleted successfully", expense: deleted });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

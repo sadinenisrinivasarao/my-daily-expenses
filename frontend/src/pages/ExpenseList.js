@@ -14,6 +14,7 @@ import {
   Spin,
 } from "antd";
 import api from "../services/api";
+import { getAuth } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
@@ -101,10 +102,17 @@ export default function ExpenseList() {
   }, [selectedMonth, selectedYear]);
 
   /* ---------- FETCH DATA ---------- */
-  const fetchExpenses = async () => {
+  const fetchExpenses = async (startDate, endDate) => {
     try {
       setLoading(true);
-      const res = await api.get("/expenses");
+      const auth = getAuth();
+      const email = auth?.email;
+      const qs = [];
+      if (startDate) qs.push(`startDate=${encodeURIComponent(startDate)}`);
+      if (endDate) qs.push(`endDate=${encodeURIComponent(endDate)}`);
+      if (email) qs.push(`email=${encodeURIComponent(email)}`);
+      const url = `/expenses${qs.length ? `?${qs.join("&")}` : ""}`;
+      const res = await api.get(url);
       setData(res.data);
     } finally {
       setLoading(false);
@@ -112,8 +120,15 @@ export default function ExpenseList() {
   };
 
   useEffect(() => {
-    fetchExpenses();
-  }, []);
+    if (dateRange?.length === 2) {
+      const start = dateRange[0].startOf("day").toISOString();
+      const end = dateRange[1].endOf("day").toISOString();
+      fetchExpenses(start, end);
+    } else {
+      fetchExpenses();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateRange]);
 
   const handleDelete = async id => {
     try {

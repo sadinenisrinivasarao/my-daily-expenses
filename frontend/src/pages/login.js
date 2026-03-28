@@ -3,6 +3,7 @@ import { MailOutlined, LockOutlined, LoginOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import "./styles.css";
+import { setAuth } from "../utils/auth";
 
 const { Title, Text } = Typography;
 
@@ -21,12 +22,17 @@ export default function Login() {
     setLoading(true);
 
     setTimeout(() => {
-      if (
-        email === process.env.REACT_APP_EMAIL &&
-        password === process.env.REACT_APP_PSD
-      ) {
+      const envEmail = process.env.REACT_APP_EMAIL;
+      const envPsd = process.env.REACT_APP_PSD;
+      const envEmail2 = process.env.REACT_APP_EMAIL2;
+      const envPsd2 = process.env.REACT_APP_PSD2;
+
+      const isEnvUser = email === envEmail && password === envPsd;
+      const isEnvUser2 = email === envEmail2 && password === envPsd2;
+
+      if (isEnvUser || isEnvUser2) {
         message.success("Welcome back 👋");
-        localStorage.setItem("auth", "true");
+        setAuth(email);
         nav("/dashboard");
       } else {
         message.error("Invalid credentials");
