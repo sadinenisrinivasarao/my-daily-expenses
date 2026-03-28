@@ -127,7 +127,6 @@ export default function ExpenseList() {
     } else {
       fetchExpenses();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange]);
 
   const handleDelete = async id => {
